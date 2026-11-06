@@ -1,0 +1,45 @@
+name: Parity
+
+# Flatpack must answer exactly what plain Statamic answers. Each job installs a fresh Statamic app
+# at one version, runs it twice (plain Statamic as the oracle, and with Flatpack), and compares
+# reads, saves, a rebuild, and files changed on disk followed by flatpack:refresh.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 5 * * 1'   # weekly, to catch new Statamic releases
+
+jobs:
+  parity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { statamic: '5.11.0', php: '8.2', name: 'Statamic 5 (earliest supported)' }
+          - { statamic: '^5.0', php: '8.3', name: 'Statamic 5 (latest)' }
+          - { statamic: '^6.0', php: '8.4', name: 'Statamic 6 (latest)' }
+    name: ${{ matrix.name }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: pcntl, opcache
+          tools: composer:v2
+          coverage: none
+
+      - name: Parity
+        run: bin/parity '${{ matrix.statamic }}' "$RUNNER_TEMP/parity"
+
+      - name: Keep the dumps when it fails
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: parity-${{ strategy.job-index }}
+          path: ${{ runner.temp }}/parity/out

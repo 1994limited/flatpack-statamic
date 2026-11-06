@@ -1,0 +1,57 @@
+{
+    "name": "1994/flatpack-statamic",
+    "description": "Compile Statamic's flat-file content at deploy into PHP files OPcache serves from memory. Content stays in your Markdown and YAML files.",
+    "type": "statamic-addon",
+    "license": "MIT",
+    "keywords": [
+        "statamic",
+        "statamic-addon",
+        "performance",
+        "stache",
+        "cache",
+        "opcache",
+        "flat file"
+    ],
+    "authors": [
+        {
+            "name": "1994",
+            "email": "hello@1994.co.uk",
+            "homepage": "https://1994.co.uk"
+        }
+    ],
+    "support": {
+        "email": "hello@1994.co.uk",
+        "issues": "https://github.com/1994limited/flatpack-statamic/issues",
+        "docs": "https://github.com/1994limited/flatpack-statamic/tree/main/docs"
+    },
+    "autoload": {
+        "psr-4": {
+            "NineteenNinetyFour\\Flatpack\\": "src"
+        }
+    },
+    "require": {
+        "php": "^8.2",
+        "statamic/cms": "^5.11|^6.0"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.20"
+    },
+    "extra": {
+        "statamic": {
+            "name": "Flatpack",
+            "description": "Compile flat-file content at deploy into PHP files OPcache serves from memory. Content stays in your files.",
+            "developer": "1994",
+            "developer-url": "https://1994.co.uk"
+        },
+        "laravel": {
+            "providers": [
+                "NineteenNinetyFour\\Flatpack\\ServiceProvider"
+            ]
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

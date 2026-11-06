@@ -1,0 +1,43 @@
+#!/bin/bash
+# Run the parity suite against a fresh Statamic app at a given version.
+# bin/parity <statamic/cms version, e.g. 6.40.0 or ^5.73> [work dir]
+#   PHP_BIN     php to use (default: php)
+#   SKELETON    statamic/statamic version to start from (default: matches the major)
+#   KEEP=1      reuse an app already in the work dir (skips create + install)
+set -euo pipefail
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+VERSION="${1:?statamic/cms version}"; MAJOR="$(echo "$VERSION" | tr -dc '0-9.' | cut -d. -f1)"
+WORK="${2:-${TMPDIR:-/tmp}/flatpack-parity/$(echo "$VERSION" | tr -dc '0-9.')}"
+PHP="${PHP_BIN:-php}"; COMPOSER=("$PHP" "$(command -v composer)")
+APP="$WORK/app.noindex"
+
+if [[ -z "${KEEP:-}" || ! -d "$APP/vendor" ]]; then
+    rm -rf "$WORK"; mkdir -p "$WORK"
+    "${COMPOSER[@]}" create-project "statamic/statamic:${SKELETON:-^$MAJOR}" "$APP" --no-interaction --prefer-dist --no-scripts -q
+    cd "$APP"
+    [ -f .env ] || cp .env.example .env
+    "${COMPOSER[@]}" config repositories.flatpack "{\"type\":\"path\",\"url\":\"$ROOT\",\"options\":{\"symlink\":true}}"
+    "${COMPOSER[@]}" config minimum-stability dev; "${COMPOSER[@]}" config prefer-stable true
+    # Older Statamic releases have published security advisories, which Composer refuses to
+    # install by default. This throwaway app only exists to test against them.
+    "${COMPOSER[@]}" config policy.advisories.block false 2>/dev/null || "${COMPOSER[@]}" config audit.block-insecure false
+    "${COMPOSER[@]}" require "statamic/cms:$VERSION" "1994/flatpack-statamic:@dev" "laravel/framework:^10.0|^11.0|^12.0|^13.0" -W --no-interaction -q
+    "$PHP" artisan key:generate -q
+    for kv in STATAMIC_PRO_ENABLED=true STATAMIC_STACHE_WATCHER=false CACHE_STORE=file CACHE_DRIVER=file QUEUE_CONNECTION=sync APP_ENV=local; do
+        k="${kv%%=*}"; grep -q "^$k=" .env && sed -i.bak "s|^$k=.*|$kv|" .env || echo "$kv" >> .env
+    done
+    rm -f .env.bak
+fi
+
+# The fixtures are multisite: Pro (set above) plus the multisite switch, which is config only.
+sed -i.bak "s/'multisite' => false/'multisite' => true/" "$APP/config/statamic/system.php" && rm -f "$APP/config/statamic/system.php.bak"
+
+# KEEP=1 with a different version: switch the existing app to it instead of starting again.
+cd "$APP"
+if [[ "$("$PHP" -r 'require "vendor/autoload.php"; echo ltrim(Composer\InstalledVersions::getPrettyVersion("statamic/cms"), "v");')" != "${VERSION#v}" ]] && [[ "$VERSION" =~ ^v?[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    "${COMPOSER[@]}" require "statamic/cms:$VERSION" "laravel/framework:^10.0|^11.0|^12.0|^13.0" -W --no-interaction -q
+fi
+
+rm -rf "$WORK/oracle.noindex"; cp -R "$APP" "$WORK/oracle.noindex"
+rm -rf "$WORK/flatpack.noindex"; cp -R "$APP" "$WORK/flatpack.noindex"
+PHP_BIN="$PHP" "$ROOT/tests/parity/run.sh" "$WORK/oracle.noindex" "$WORK/flatpack.noindex" "$WORK/out"
