@@ -51,7 +51,7 @@ What it shows: the bigger the site and the deeper its page builders, the more Fl
 
 - PHP 8.2 or later
 - Statamic 5.11 or later, or Statamic 6
-- OPcache enabled for web requests (it is by default on Forge and Laravel Cloud)
+- OPcache enabled for web requests (it is by default on Forge and Laravel Cloud; see [if OPcache is off](docs/deployment.md#if-opcache-is-off))
 - Content kept in files (Flatpack does nothing for content stored with the Eloquent driver)
 
 Flatpack suits sites on one server, and sites on several servers whose content is edited locally and deployed (the way Laravel recommends running flat-file Statamic on Laravel Cloud). It isn't a good fit for several servers whose content is edited in the live Control Panel. See [more than one server](docs/deployment.md#more-than-one-server).

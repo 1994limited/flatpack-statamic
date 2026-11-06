@@ -102,3 +102,9 @@ Don't confuse it with Statamic's `stache:refresh`, which rebuilds everything. `f
 ## OPcache
 
 Flatpack is fastest when OPcache is on for web requests, which it is on Forge and Laravel Cloud. If you set `opcache.validate_timestamps=0`, that's fine: compiled files are never rewritten in place, so OPcache can't serve a stale one, and you don't need to reload PHP-FPM for Flatpack's sake.
+
+### If OPcache is off
+
+Without OPcache, PHP compiles Flatpack's files again on every request, and that's a little slower than plain Statamic reading its own cache. On the demo site (6,000 books with a nested page builder), pages were 2 to 14% slower than without Flatpack. With OPcache on, they were 9 to 13% faster.
+
+Builds stay faster and use less memory either way, because builds run on the command line, where OPcache is normally off anyway. To check, run `php please flatpack:status` or open the Flatpack utility: both show whether OPcache is on for web requests. If you can't turn it on, either keep Flatpack for its faster builds and accept slightly slower pages, or switch it off with `FLATPACK_ENABLED=false`.
