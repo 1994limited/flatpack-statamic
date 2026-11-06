@@ -43,4 +43,8 @@ dump edited; same "files changed on disk, then flatpack:refresh" edited
 # flatpack:build / flatpack:refresh fall back to Statamic's own clear + warm.
 check "switched off: stache:warm, flatpack:build and flatpack:refresh still work" bash -c "cd '$O' && FLATPACK_ENABLED=false '${PHP[0]}' please stache:warm -q && FLATPACK_ENABLED=false '${PHP[0]}' please flatpack:build -q && FLATPACK_ENABLED=false '${PHP[0]}' please flatpack:refresh -q"
 
+# A Statamic release that renames something Flatpack reaches inside of: Flatpack must pause and
+# leave the site on Statamic's own Stache, with the same answers as plain Statamic.
+check "Statamic changed something Flatpack relies on: Flatpack pauses, reads still match" "$HERE/paused.sh" "$C" "$OUT/o-edited.json" "$OUT"
+
 echo "$fails failing check(s)"; exit $fails

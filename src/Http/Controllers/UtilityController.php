@@ -3,6 +3,7 @@
 namespace NineteenNinetyFour\Flatpack\Http\Controllers;
 
 use Illuminate\Http\Request;
+use NineteenNinetyFour\Flatpack\Compatibility;
 use NineteenNinetyFour\Flatpack\Flatpack;
 use NineteenNinetyFour\Flatpack\Jobs\RunFlatpack;
 use NineteenNinetyFour\Flatpack\Status;
@@ -19,6 +20,7 @@ class UtilityController extends CpController
 
         return [
             'enabled' => Status::enabled(),
+            'paused' => Status::paused() ? Compatibility::message() : null,
             'built' => Status::built(),
             'builtAgo' => Status::builtAt() ? \Carbon\Carbon::createFromTimestamp(Status::builtAt())->diffForHumans() : null,
             'builtVia' => Status::builtVia(),
@@ -52,6 +54,10 @@ class UtilityController extends CpController
     {
         if (! Status::controlPanelActions()) {
             return back()->withErrors(__('Building from the Control Panel is turned off (FLATPACK_CP_ACTIONS=false). Run php please flatpack:build in your deploy.'));
+        }
+
+        if (Status::paused()) {
+            return back()->withErrors(Compatibility::message());
         }
 
         if (! Status::enabled()) {

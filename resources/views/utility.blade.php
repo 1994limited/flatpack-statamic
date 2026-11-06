@@ -19,7 +19,9 @@
         <ui-alert class="mb-6" text="{{ __('Without Flatpack, the Stache would be in your :store cache, which every server of a site can share. Flatpack keeps it on this server\'s disk instead. On one server that\'s fine. On several, a Control Panel save only shows on the server that took it, until each one runs flatpack:refresh or a deploy rebuilds it.', ['store' => $sharedStore['store'] === $sharedStore['driver'] ? $sharedStore['store'] : $sharedStore['store'].' ('.$sharedStore['driver'].')']) }}"></ui-alert>
     @endif
 
-    @if (! $enabled)
+    @if ($paused)
+        <ui-alert variant="error" class="mb-6" text="{{ $paused }}"></ui-alert>
+    @elseif (! $enabled)
         <ui-alert variant="warning" class="mb-6" text="{{ __('Flatpack is turned off (FLATPACK_ENABLED=false), so Statamic is using its own Stache cache.') }}"></ui-alert>
     @elseif ($running)
         <ui-alert class="mb-6" text="{{ __('A :action started :ago and is still running. Reload to check. If it never finishes, this clears itself after 15 minutes.', ['action' => $running['action'], 'ago' => $running['ago']]) }}"></ui-alert>

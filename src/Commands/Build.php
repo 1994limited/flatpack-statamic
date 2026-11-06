@@ -4,6 +4,8 @@ namespace NineteenNinetyFour\Flatpack\Commands;
 
 use Illuminate\Console\Command;
 use NineteenNinetyFour\Flatpack\Builder;
+use NineteenNinetyFour\Flatpack\Compatibility;
+use NineteenNinetyFour\Flatpack\Status;
 use Statamic\Console\RunsInPlease;
 use Statamic\Facades\Stache;
 
@@ -18,7 +20,7 @@ class Build extends Command
 
     public function handle(): int
     {
-        if (! config('flatpack.enabled', true)) {
+        if (! Status::enabled()) {
             return $this->stacheInstead();
         }
 
@@ -43,7 +45,9 @@ class Build extends Command
      */
     private function stacheInstead(): int
     {
-        $this->components->info('Flatpack is switched off (FLATPACK_ENABLED=false), so warming Statamic\'s own Stache instead.');
+        Status::paused()
+            ? $this->components->warn(Compatibility::message().' Warming Statamic\'s own Stache instead.')
+            : $this->components->info('Flatpack is switched off (FLATPACK_ENABLED=false), so warming Statamic\'s own Stache instead.');
 
         $this->components->task('Clearing the Stache', fn () => Stache::clear());
         $this->components->task('Warming the Stache', fn () => Stache::warm());

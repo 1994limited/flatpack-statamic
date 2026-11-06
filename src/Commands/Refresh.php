@@ -4,7 +4,9 @@ namespace NineteenNinetyFour\Flatpack\Commands;
 
 use Illuminate\Console\Command;
 use NineteenNinetyFour\Flatpack\Builder;
+use NineteenNinetyFour\Flatpack\Compatibility;
 use NineteenNinetyFour\Flatpack\Flatpack;
+use NineteenNinetyFour\Flatpack\Status;
 use Statamic\Console\RunsInPlease;
 use Statamic\Facades\Stache;
 
@@ -18,10 +20,12 @@ class Refresh extends Command
 
     public function handle(): int
     {
-        if (! config('flatpack.enabled', true)) {
+        if (! Status::enabled()) {
             // Statamic's own Stache has no "only what changed" refresh to fall back to (its watcher
             // does that on requests, when it's on), so rebuild it: slower, but the result is right.
-            $this->components->info('Flatpack is switched off (FLATPACK_ENABLED=false), so rebuilding Statamic\'s own Stache instead.');
+            Status::paused()
+                ? $this->components->warn(Compatibility::message().' Rebuilding Statamic\'s own Stache instead.')
+                : $this->components->info('Flatpack is switched off (FLATPACK_ENABLED=false), so rebuilding Statamic\'s own Stache instead.');
             $this->components->task('Clearing the Stache', fn () => Stache::clear());
             $this->components->task('Warming the Stache', fn () => Stache::warm());
 

@@ -10,9 +10,16 @@ final class Status
     public const RUNNING = 'flatpack::running';
     public const LAST_RUN = 'flatpack::last-run';
 
+    /** Switched on, and nothing it relies on has changed in this Statamic version. */
     public static function enabled(): bool
     {
-        return (bool) config('flatpack.enabled', true);
+        return (bool) config('flatpack.enabled', true) && Compatibility::ok();
+    }
+
+    /** Switched on, but paused because this Statamic version changed something it relies on. */
+    public static function paused(): bool
+    {
+        return (bool) config('flatpack.enabled', true) && ! Compatibility::ok();
     }
 
     public static function built(): bool

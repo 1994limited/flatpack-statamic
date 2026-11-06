@@ -3,6 +3,7 @@
 namespace NineteenNinetyFour\Flatpack\Commands;
 
 use Illuminate\Console\Command;
+use NineteenNinetyFour\Flatpack\Compatibility;
 use NineteenNinetyFour\Flatpack\Flatpack;
 use NineteenNinetyFour\Flatpack\Status as State;
 use Statamic\Console\RunsInPlease;
@@ -19,7 +20,10 @@ class Status extends Command
     {
         $row = fn (string $label, string $value) => $this->components->twoColumnDetail($label, $value);
 
-        $row('Enabled', State::enabled() ? '<fg=green>yes</>' : '<fg=yellow>no</>');
+        $row('Enabled', State::paused() ? '<fg=red>paused</>' : (State::enabled() ? '<fg=green>yes</>' : '<fg=yellow>no</>'));
+        if (State::paused()) {
+            $this->components->error(Compatibility::message());
+        }
         $row('Path', Flatpack::$path ?: (string) config('flatpack.path'));
         $row('Stache cache store', (string) config('statamic.stache.cache_store'));
         if ($shared = State::replacedSharedStore()) {

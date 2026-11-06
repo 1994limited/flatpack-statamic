@@ -31,7 +31,9 @@
         <div class="card mb-6 text-sm">{{ __('Without Flatpack, the Stache would be in your :store cache, which every server of a site can share. Flatpack keeps it on this server\'s disk instead. On one server that\'s fine. On several, a Control Panel save only shows on the server that took it, until each one runs flatpack:refresh or a deploy rebuilds it.', ['store' => $sharedStore['store'] === $sharedStore['driver'] ? $sharedStore['store'] : $sharedStore['store'].' ('.$sharedStore['driver'].')']) }}</div>
     @endif
 
-    @if (! $enabled)
+    @if ($paused)
+        <div class="card mb-6 text-sm text-red-500">{{ $paused }}</div>
+    @elseif (! $enabled)
         <div class="card mb-6 text-sm">{{ __('Flatpack is turned off (FLATPACK_ENABLED=false), so Statamic is using its own Stache cache.') }}</div>
     @elseif ($running)
         <div class="card mb-6 text-sm">{{ __('A :action started :ago and is still running. Reload to check. If it never finishes, this clears itself after 15 minutes.', ['action' => $running['action'], 'ago' => $running['ago']]) }}</div>

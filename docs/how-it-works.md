@@ -35,3 +35,11 @@ Saves from the Control Panel go through Statamic as normal, so the content files
 A deploy or `git pull` changes files directly. `php please flatpack:refresh` finds which files changed, re-reads only those, and re-derives what depends on them: URIs, parents and order after a page tree changes, and the taxonomy terms linked to changed entries. It also handles deleted files, which Statamic's own watcher leaves behind.
 
 If you change content files on a server and don't run a refresh, Statamic's own file watcher (when it's on) still picks up changed files as usual.
+
+## How it stays safe across Statamic updates
+
+To do its job, Flatpack reaches inside parts of Statamic that aren't public API: a few protected properties and methods of the Stache's stores, its indexes, the entry class and the file traverser. A Statamic release could rename them, and some of those changes would fail silently (writing to a renamed property just creates a new one), leaving stale content.
+
+So Flatpack checks, every time it boots, that everything it uses is still there (`src/Compatibility.php` lists them). If anything is missing, it doesn't load: the site runs on Statamic's own Stache, `flatpack:build` and `flatpack:refresh` warm Statamic's Stache instead, and `flatpack:status`, the Flatpack utility and the log say what changed. The worst a Statamic update can do is make the site as fast as it was without Flatpack. The check costs a few `property_exists` calls on classes Statamic loads anyway.
+
+That check only knows the names are still there, not that they still mean the same thing. That's what the [parity suite](testing.md) is for: it compares Flatpack with plain Statamic every day on the latest Statamic 5 and 6, and on Statamic's unreleased `6.x` branch, so a change is caught before it's tagged. Composer won't install Flatpack on a Statamic major it hasn't been tested on.

@@ -3,7 +3,9 @@
 namespace NineteenNinetyFour\Flatpack;
 
 use Illuminate\Cache\CacheManager;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Facade;
+use Illuminate\Support\Facades\Log;
 use NineteenNinetyFour\Flatpack\Commands\Build;
 use NineteenNinetyFour\Flatpack\Commands\Refresh;
 use NineteenNinetyFour\Flatpack\Commands\Status;
@@ -39,6 +41,13 @@ class ServiceProvider extends AddonServiceProvider
         }
 
         Flatpack::configure((string) config('flatpack.path'), (int) config('flatpack.lazy_limit', 2048));
+
+        // A Statamic release has changed something Flatpack reaches inside of: run on
+        // Statamic's own Stache instead of risking stale or wrong content.
+        if (! Compatibility::ok()) {
+            return;
+        }
+
         FlatpackStore::$buckets = max(1, (int) config('flatpack.shard_buckets', 32));
 
         // What the Stache would have used without Flatpack, so we can say when Flatpack has
@@ -76,6 +85,12 @@ class ServiceProvider extends AddonServiceProvider
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'flatpack');
         $this->registerUtility();
 
+        if (\NineteenNinetyFour\Flatpack\Status::paused()) {
+            $this->warnPaused();
+
+            return;
+        }
+
         if (! config('flatpack.enabled', true)) {
             return;
         }
@@ -83,6 +98,18 @@ class ServiceProvider extends AddonServiceProvider
         // Writes are buffered for the request and written once at the end.
         $this->app->terminating(fn () => FlatpackStore::persistAll());
         register_shutdown_function(fn () => FlatpackStore::persistAll());
+    }
+
+    /** Log why Flatpack is paused, once a day rather than on every request. */
+    private function warnPaused(): void
+    {
+        try {
+            if (Cache::add('flatpack::paused-logged:'.md5(Compatibility::message()), true, now()->addDay())) {
+                Log::warning(Compatibility::message());
+            }
+        } catch (\Throwable) {
+            // A cache that isn't reachable shouldn't take the site down over a warning.
+        }
     }
 
     private function registerUtility(): void

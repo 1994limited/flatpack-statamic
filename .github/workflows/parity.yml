@@ -10,7 +10,7 @@ on:
   pull_request:
   workflow_dispatch:
   schedule:
-    - cron: '0 5 * * 1'   # weekly, to catch new Statamic releases
+    - cron: '0 5 * * *'   # daily: a new Statamic release is caught the day it's tagged
 
 jobs:
   parity:
@@ -42,4 +42,32 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: parity-${{ strategy.job-index }}
+          path: ${{ runner.temp }}/parity/out
+
+  # Statamic's next release, before it's tagged: its 6.x branch. A failure here is the warning
+  # that the next Statamic release will pause Flatpack (or worse), so a fix can ship with it.
+  # Not run on pull requests, where it would fail them for changes outside this repo.
+  upcoming:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    name: Statamic 6 (unreleased, 6.x-dev)
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pcntl, opcache
+          tools: composer:v2
+          coverage: none
+
+      - name: Parity
+        run: bin/parity '6.x-dev' "$RUNNER_TEMP/parity"
+
+      - name: Keep the dumps when it fails
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: parity-upcoming
           path: ${{ runner.temp }}/parity/out
