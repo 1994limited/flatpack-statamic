@@ -150,6 +150,15 @@ for ($c = 0; $c < $count; $c++) {
         $doc = $mutate($r($corpus));
     }
 
+    if (mt_rand(0, 199) === 0) {
+        // Deep nesting: Symfony 8 limits it, so the fast parser has to hand it over in time.
+        $doc = '';
+        for ($i = 0, $depth = mt_rand(20, 140), $twice = mt_rand(0, 1); $i < $depth; $i++) {
+            $doc .= str_repeat(' ', $i)."k$i:\n".($twice ? str_repeat(' ', $i)."-\n" : '');
+        }
+        $doc .= str_repeat(' ', $depth)."last: 1\n";
+    }
+
     $stats['cases']++;
 
     try {
