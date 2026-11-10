@@ -63,10 +63,17 @@ final class FastParser
     /** Whether the document has tabs, which are only understood inside literal blocks. */
     private bool $tabs = false;
 
-    /** Raw key text => parsed key, for keys already proven safe. */
-    private static array $keys = [];
+    /**
+     * The most keys that are remembered. The list lives as long as the process does, which
+     * under Octane or in a queue worker is many requests, so it must not grow without limit.
+     */
+    private const MAX_KEYS = 2048;
 
-    private static ?CannotFastParse $cannot = null;
+    /**
+     * Raw key text => parsed key, for keys already proven safe. What a key parses to depends
+     * only on its text, so an entry is never out of date.
+     */
+    private static array $keys = [];
 
     private static ?Parser $symfony = null;
 
@@ -127,7 +134,7 @@ final class FastParser
 
     private function fail(): never
     {
-        throw self::$cannot ??= new CannotFastParse;
+        throw new CannotFastParse;
     }
 
     /**
@@ -252,7 +259,7 @@ final class FastParser
                     return null;
                 }
             } else {
-                return self::$keys[$raw] = $raw;
+                return $this->remember($raw, $raw);
             }
         }
 
@@ -270,7 +277,16 @@ final class FastParser
             $this->fail();
         }
 
-        return self::$keys[$raw] = $key;
+        return $this->remember($raw, $key);
+    }
+
+    private function remember(string $raw, string|int $key): string|int
+    {
+        if (count(self::$keys) < self::MAX_KEYS) {
+            self::$keys[$raw] = $key;
+        }
+
+        return $key;
     }
 
     /**
