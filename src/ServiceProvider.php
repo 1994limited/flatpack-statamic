@@ -71,7 +71,10 @@ class ServiceProvider extends AddonServiceProvider
         $this->app->booting(function ($app) {
             $app->bind(\Statamic\Contracts\Entries\Entry::class, FlatpackEntry::class);
             $app->bind(\Statamic\Stache\Traverser::class, Stache\FastTraverser::class);
-            $app->singleton(\Statamic\Yaml\Yaml::class, fn () => new LeanYaml(new Yaml\SymfonyFast));
+            // Statamic parses with its own fast parser where it has one; older versions get Flatpack's.
+            $app->singleton(\Statamic\Yaml\Yaml::class, fn () => new LeanYaml(
+                Flatpack::statamicHasFastParser() ? new \Symfony\Component\Yaml\Yaml : new Yaml\SymfonyFast
+            ));
             Facade::clearResolvedInstance(\Statamic\Yaml\Yaml::class);
         });
     }

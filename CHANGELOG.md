@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- **Statamic's own fast YAML parser is used where it has one.** Flatpack's copy is only used on Statamic versions without it.
+
 ## 1.1.0 (2026-11-10)
 
 ### Changed
