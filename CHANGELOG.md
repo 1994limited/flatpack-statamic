@@ -1,12 +1,16 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- **Statamic's own fast YAML parser is used where it has one.** Flatpack's copy is only used on Statamic versions without it.
+
 ## 1.1.0 (2026-11-10)
 
 ### Changed
 
 - **A faster YAML parser that gives up on far fewer files.** An unusual key or value (a double-quoted string with escapes, a key that starts with a digit or has a dash or quotes, a date) is now read by Symfony's inline parser on its own, where before the whole file went back to Symfony's full parser. Tabs inside literal blocks no longer send the file back either. On a large site, files that needed the full parser went from 38% to 2%, and parsing all of its content from 13.9 s to 1.6 s.
-
-- **Statamic's own fast YAML parser is used where it has one.** Flatpack's copy is only used on Statamic versions without it.
 
 ### Fixed
 
