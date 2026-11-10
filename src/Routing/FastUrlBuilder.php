@@ -4,6 +4,7 @@ namespace NineteenNinetyFour\Flatpack\Routing;
 
 use Statamic\Facades\Antlers;
 use Statamic\Routing\UrlBuilder;
+use Statamic\View\Antlers\Language\Runtime\EnvironmentDetails;
 
 /**
  * Statamic builds every entry's URL by running its route through Antlers, with a new parser
@@ -69,6 +70,11 @@ class FastUrlBuilder extends UrlBuilder
         if (! $simple || $filled === null || strpbrk($filled, '{}') !== false) {
             return parent::build($route);
         }
+
+        // Creating an Antlers parser also records which tags and modifiers exist at that moment,
+        // and a tag registered after the view engine was created is only seen once that happens
+        // again. Statamic's builder did it for every URL, so it is still done here.
+        app(EnvironmentDetails::class);
 
         // Statamic's builder does the rest. It has no values left to look up, so it is given
         // content with no route data rather than working the entry's out a second time.

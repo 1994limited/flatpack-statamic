@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- **Faster builds, with less memory.** Statamic builds each entry's URL by running its route through Antlers with a new parser every time. Routes that are only placeholders (`/books/{slug}`, `{parent_uri}/{slug}`) now have their values put in directly; anything else still goes through Antlers. On the demo's 9,000-entry nested page builder site the build went from 21.5 s to 15.5 s and its memory from 356 MB to 285 MB.
+- **Entries are cheaper to read.** Statamic snapshots an entry's state every time one is read, so it can later say what changed. Flatpack now works that snapshot out only when something asks for it. Reading 9,000 entries through a query went from 81 to 32 microseconds each.
+
 ## 1.1.1 (2026-11-10)
 
 ### Fixed
@@ -9,8 +16,6 @@
 
 ### Changed
 
-- **Faster builds, with less memory.** Statamic builds each entry's URL by running its route through Antlers with a new parser every time. Routes that are only placeholders (`/books/{slug}`, `{parent_uri}/{slug}`) now have their values put in directly; anything else still goes through Antlers. On the demo's 9,000-entry nested page builder site the build went from 21.5 s to 15.5 s and its memory from 356 MB to 285 MB.
-- **Entries are cheaper to read.** Statamic snapshots an entry's state every time one is read, so it can later say what changed. Flatpack now works that snapshot out only when something asks for it. Reading 9,000 entries through a query went from 81 to 32 microseconds each.
 - **Statamic's own fast YAML parser is used where it has one.** Flatpack's copy is only used on Statamic versions without it.
 
 ## 1.1.0 (2026-11-10)
