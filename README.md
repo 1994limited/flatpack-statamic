@@ -33,19 +33,19 @@ Measured with the [Dog-ear Books demo](https://github.com/1994limited/flatpack-s
 
 | Content | Entries | Build | Build memory | Typical page | Save |
 |---|---|---:|---:|---:|---:|
-| Fixed fields, small | 375 | 958 ms → **780 ms** | 81 MB → **77 MB** | 70 ms → **60 ms** | 111 ms → **88 ms** |
-| Fixed fields, medium | 2,250 | 5.0 s → **4.1 s** | 143 MB → **135 MB** | 115 ms → **100 ms** | 237 ms → **193 ms** |
-| Fixed fields, large | 9,000 | 21.8 s → **15.3 s** | 375 MB → **311 MB** | 296 ms → **256 ms** | 1.4 s → **642 ms** |
-| Page builder, small | 375 | 1.4 s → **856 ms** | 133 MB → **73 MB** | 76 ms → **67 ms** | 116 ms → **89 ms** |
-| Page builder, medium | 2,250 | 8.1 s → **4.3 s** | 349 MB → **143 MB** | 137 ms → **124 ms** | 245 ms → **222 ms** |
-| Page builder, large | 9,000 | 33.2 s → **18.0 s** | 1.1 GB → **365 MB** | 337 ms → **293 ms** | 1.6 s → **670 ms** |
-| Nested page builder, small | 375 | 2.3 s → **865 ms** | 165 MB → **75 MB** | 92 ms → **79 ms** | 109 ms → **81 ms** |
-| Nested page builder, medium | 2,250 | 13.8 s → **4.7 s** | 639 MB → **145 MB** | 200 ms → **169 ms** | 314 ms → **196 ms** |
-| Nested page builder, large | 9,000 | 62.5 s → **19.2 s** | 2.2 GB → **365 MB** | 555 ms → **481 ms** | 2.2 s → **669 ms** |
+| Fixed fields, small | 375 | 952 ms → **610 ms** | 81 MB → **57 MB** | 73 ms → **61 ms** | 101 ms → **81 ms** |
+| Fixed fields, medium | 2,250 | 5.0 s → **3.1 s** | 143 MB → **91 MB** | 121 ms → **100 ms** | 240 ms → **171 ms** |
+| Fixed fields, large | 9,000 | 22.8 s → **12.5 s** | 375 MB → **213 MB** | 306 ms → **262 ms** | 1.6 s → **578 ms** |
+| Page builder, small | 375 | 1.5 s → **700 ms** | 133 MB → **59 MB** | 82 ms → **68 ms** | 112 ms → **82 ms** |
+| Page builder, medium | 2,250 | 8.3 s → **3.7 s** | 351 MB → **97 MB** | 149 ms → **131 ms** | 400 ms → **184 ms** |
+| Page builder, large | 9,000 | 37.0 s → **15.0 s** | 1.1 GB → **241 MB** | 355 ms → **307 ms** | 1.8 s → **604 ms** |
+| Nested page builder, small | 375 | 2.4 s → **800 ms** | 165 MB → **59 MB** | 103 ms → **87 ms** | 123 ms → **87 ms** |
+| Nested page builder, medium | 2,250 | 14.1 s → **4.0 s** | 641 MB → **97 MB** | 200 ms → **172 ms** | 582 ms → **195 ms** |
+| Nested page builder, large | 9,000 | 58.7 s → **14.7 s** | 2.2 GB → **241 MB** | 554 ms → **473 ms** | 2.3 s → **494 ms** |
 
 Statamic → **with Flatpack**. "Typical page" is the median of six kinds of page (home, a book list, a book, a journal post, an author, a subject). Saves are single measurements, so read them as a direction.
 
-What it shows: the bigger the site and the deeper its page builders, the more Flatpack saves at build time and in memory (3.3× faster and 6× less memory for a 9,000-entry site with nested page builders). Page loads improve by 9 to 16%: most of a page's time is spent rendering templates, which Flatpack doesn't change. Your numbers will differ, so run the demo on your own machine: `php artisan demo:compare --all`.
+What it shows: the bigger the site and the deeper its page builders, the more Flatpack saves at build time and in memory (4× faster and 9× less memory for a 9,000-entry site with nested page builders). Page loads improve by 12 to 17%: most of a page's time is spent rendering templates, which Flatpack doesn't change. Your numbers will differ, so run the demo on your own machine: `php artisan demo:compare --all`.
 
 The demo's content is generated, so its YAML is as tidy as YAML gets. Real content has more in it that a fast parser has to be careful with (escaped quotes, keys that start with a digit, scripts pasted into text fields). On one large real site, parsing all 5,096 content files takes 22.3 s with Symfony's parser and 1.6 s with Flatpack's.
 
