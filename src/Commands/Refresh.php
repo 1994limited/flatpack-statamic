@@ -38,6 +38,12 @@ class Refresh extends Command
             return $this->call('flatpack:build');
         }
 
+        if (Builder::builtElsewhere()) {
+            $this->components->info('The content was built for the app at another path (a new release directory), so building everything.');
+
+            return $this->call('flatpack:build');
+        }
+
         $out = Builder::refresh();
 
         if (! $out['changed_stores']) {

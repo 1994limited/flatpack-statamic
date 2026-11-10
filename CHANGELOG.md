@@ -1,6 +1,11 @@
 # Changelog
 
-## Unreleased
+## 1.1.1 (2026-11-10)
+
+### Fixed
+
+- **Building after a deploy into a new release directory.** With zero-downtime deploys the app moves to a new path while `storage` is shared. `flatpack:build` then failed, and left the site with no content until it was fixed. It now builds from the new path, and a build that fails for any reason leaves the last good one in place.
+- `flatpack:refresh` (and Refresh in the Control Panel) builds everything when the content was compiled for another path, where before it failed. `flatpack:status` says so too.
 
 ### Changed
 
