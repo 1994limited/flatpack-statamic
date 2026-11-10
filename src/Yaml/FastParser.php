@@ -36,6 +36,12 @@ final class FastParser
 
     private const RESERVED = ['null' => null, 'true' => true, 'false' => false];
 
+    /**
+     * Deeper documents are left to Symfony, which applies its own nesting limit. This is
+     * well below Symfony's default limit, and far deeper than real content goes.
+     */
+    private const MAX_DEPTH = 64;
+
     private array $lines = [];
 
     private int $n = 0;
@@ -47,6 +53,9 @@ final class FastParser
 
     /** How many "- key: value" mappings are open. */
     private int $compact = 0;
+
+    /** How many mappings and sequences are open. */
+    private int $depth = 0;
 
     /** Whether the document has tabs, which are only understood inside literal blocks. */
     private bool $tabs = false;
@@ -123,6 +132,10 @@ final class FastParser
      */
     private function parseMap(int $ind, ?string $line): array
     {
+        if (++$this->depth > self::MAX_DEPTH) {
+            $this->fail();
+        }
+
         $out = [];
         $count = 0;
         $lines = $this->lines;
@@ -183,9 +196,6 @@ final class FastParser
             if ($v === '') {
                 // The value is the nested block that follows, if there is one.
                 if ($p < $n && ($j = strspn($next = $lines[$p], ' ')) > $ind && isset($next[$j])) {
-                    if ($j > 100) {
-                        $this->fail(); // Leave very deep nesting to Symfony, which limits it.
-                    }
                     $this->p = $p;
                     $out[$key] = $next[$j] === '-' && (! isset($next[$j + 1]) || $next[$j + 1] === ' ')
                         ? $this->parseSeq($j)
@@ -216,6 +226,7 @@ final class FastParser
         }
 
         $this->p = $p;
+        $this->depth--;
 
         return $out;
     }
@@ -301,6 +312,10 @@ final class FastParser
 
     private function parseSeq(int $ind): array
     {
+        if (++$this->depth > self::MAX_DEPTH) {
+            $this->fail();
+        }
+
         $out = [];
         $lines = $this->lines;
         $n = $this->n;
@@ -334,9 +349,6 @@ final class FastParser
                 // A dash on its own: the item is the block that follows.
                 $this->p = ++$p;
                 if ($p < $n && ($j = strspn($next = $lines[$p], ' ')) > $ind && isset($next[$j])) {
-                    if ($j > 100) {
-                        $this->fail();
-                    }
                     $out[] = $next[$j] === '-' && (! isset($next[$j + 1]) || $next[$j + 1] === ' ')
                         ? $this->parseSeq($j)
                         : $this->parseMap($j, null);
@@ -387,6 +399,7 @@ final class FastParser
         }
 
         $this->p = $p;
+        $this->depth--;
 
         return $out;
     }
@@ -426,10 +439,6 @@ final class FastParser
         }
 
         if ($i > $ind) {
-            if ($i > 100) {
-                $this->fail(); // Leave very deep nesting to Symfony, which limits it.
-            }
-
             return $line[$i] === '-' && (! isset($line[$i + 1]) || $line[$i + 1] === ' ')
                 ? $this->parseSeq($i)
                 : $this->parseMap($i, null);
