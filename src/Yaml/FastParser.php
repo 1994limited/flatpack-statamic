@@ -17,6 +17,9 @@ use Symfony\Component\Yaml\Parser;
  * collections or plain scalars, invalid YAML) makes it return null, and the caller parses the
  * whole document with Symfony. Errors are therefore always Symfony's.
  *
+ * Statamic has had the same parser of its own since [version to fill in at release]. Flatpack uses
+ * Statamic's where it exists and this one on older versions (see Flatpack::statamicHasFastParser()).
+ *
  * tests/yaml/fuzz.php checks it against Symfony's parser.
  */
 final class FastParser
