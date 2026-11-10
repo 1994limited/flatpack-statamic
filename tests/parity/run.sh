@@ -39,6 +39,19 @@ oracle "$HERE/clear.php" "$O" >/dev/null
 (cd "$C" && flatpack please flatpack:refresh -q) || { echo "  refresh failed:"; (cd "$C" && flatpack please flatpack:refresh 2>&1 | head -15); fails=$((fails+1)); }
 dump edited; same "files changed on disk, then flatpack:refresh" edited
 
+# A deploy into a new release directory with shared storage: the app is at a new path and the
+# compiled content, which holds absolute paths, comes with it. A build there, or a refresh, has
+# to give the same answers from the new path.
+M="$C-moved"; rm -rf "$M" "$M-again"; cp -R "$C" "$M"
+(cd "$M" && flatpack please flatpack:build -q) || { echo "  build after moving failed:"; (cd "$M" && flatpack please flatpack:build 2>&1 | head -15); fails=$((fails+1)); }
+flatpack "$HERE/dump.php" "$M" "$OUT/c-moved.json" >/dev/null
+check "moved to a new directory, then flatpack:build" python3 "$HERE/compare.py" "$OUT/o-edited.json" "$OUT/c-moved.json" --show 5
+cp -R "$M" "$M-again"
+(cd "$M-again" && flatpack please flatpack:refresh -q) || { echo "  refresh after moving failed:"; (cd "$M-again" && flatpack please flatpack:refresh 2>&1 | head -15); fails=$((fails+1)); }
+flatpack "$HERE/dump.php" "$M-again" "$OUT/c-moved-again.json" >/dev/null
+check "moved again, then flatpack:refresh" python3 "$HERE/compare.py" "$OUT/o-edited.json" "$OUT/c-moved-again.json" --show 5
+rm -rf "$M" "$M-again"
+
 # Switched off, Flatpack must stay out of the way: Statamic's own commands work, and
 # flatpack:build / flatpack:refresh fall back to Statamic's own clear + warm.
 check "switched off: stache:warm, flatpack:build and flatpack:refresh still work" bash -c "cd '$O' && FLATPACK_ENABLED=false '${PHP[0]}' please stache:warm -q && FLATPACK_ENABLED=false '${PHP[0]}' please flatpack:build -q && FLATPACK_ENABLED=false '${PHP[0]}' please flatpack:refresh -q"

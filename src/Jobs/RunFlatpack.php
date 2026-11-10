@@ -32,7 +32,8 @@ class RunFlatpack
         Cache::put(Status::RUNNING, ['action' => $this->action, 'at' => time()], 900);
 
         try {
-            $result = $this->action === 'build'
+            // A refresh can't follow the app to a new path: everything compiled holds absolute paths.
+            $result = $this->action === 'build' || Builder::builtElsewhere()
                 ? Builder::compile((int) config('flatpack.build_workers', 4))
                 : Builder::refresh();
 

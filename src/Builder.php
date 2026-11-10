@@ -17,21 +17,51 @@ final class Builder
     public static function compile(int $bodyWorkers = 0): array
     {
         $t = hrtime(true);
-        Stache::clear();
         Listeners\RecordManifest::$paused = true;
         try {
+            Stache::clear();
+            // Clearing forgets each store's saved keys but leaves the ones it has in memory. They
+            // hold absolute paths, so after a deploy into a new release directory every file
+            // would look like a duplicate of itself at its old path, and nothing would be built.
+            self::forgetKeysInMemory();
             Stache::warm();
+            self::recordTimestamps();
+        } catch (\Throwable $e) {
+            // A build that fails must leave the last good one in place, not a cleared store.
+            self::store()->discard();
+
+            throw $e;
         } finally {
             Listeners\RecordManifest::$paused = false;
         }
-        self::recordTimestamps();
         self::store()->persist();
         $gc = self::store()->gc();
         $out = ['compile_s' => round((hrtime(true) - $t) / 1e9, 2), 'gc_files' => $gc];
         if ($bodyWorkers > 0) $out += self::precompileBodies($bodyWorkers);
-        self::stamp(['built_at' => time(), 'build_s' => round((hrtime(true) - $t) / 1e9, 2), 'refreshed_at' => null, 'via' => 'flatpack:build']);
+        self::stamp(['built_at' => time(), 'build_s' => round((hrtime(true) - $t) / 1e9, 2), 'refreshed_at' => null, 'via' => 'flatpack:build', 'base_path' => base_path()]);
 
         return $out;
+    }
+
+    /**
+     * Plain stores first: finding an aggregate store's children (a collection's entries, a
+     * taxonomy's terms) reads the collections and taxonomies stores, which must be clean by then.
+     */
+    private static function forgetKeysInMemory(): void
+    {
+        $aggregates = [];
+        foreach (Stache::stores() as $store) {
+            if ($store instanceof \Statamic\Stache\Stores\AggregateStore) {
+                $aggregates[] = $store;
+            } else {
+                $store->keys()->setKeys([]);
+            }
+        }
+        foreach ($aggregates as $aggregate) {
+            foreach ($aggregate->discoverStores() as $store) {
+                $store->keys()->setKeys([]);
+            }
+        }
     }
 
     /** @return array<string, \Statamic\Stache\Stores\Store> every concrete store, keyed by its key */
@@ -92,7 +122,25 @@ final class Builder
     /** A warm outside flatpack:build (stache:warm, stache:refresh, the Cache Manager) counts as a build. */
     public static function stampWarm(): void
     {
-        self::stamp(['built_at' => time(), 'build_s' => null, 'refreshed_at' => null, 'via' => 'stache:warm']);
+        self::stamp(['built_at' => time(), 'build_s' => null, 'refreshed_at' => null, 'via' => 'stache:warm', 'base_path' => base_path()]);
+    }
+
+    /**
+     * Whether the content was compiled for the app at another path: a deploy into a new release
+     * directory with shared storage. Everything compiled holds absolute paths, so it all has to
+     * be built again from here.
+     */
+    public static function builtElsewhere(): bool
+    {
+        if (($path = self::stamps()['base_path'] ?? null) !== null) {
+            return $path !== base_path();
+        }
+
+        // A build from before the path was recorded: see where its collection files were.
+        $saved = Stache::cacheStore()->get('stache::indexes::collections::path') ?: [];
+        $directory = Stache::store('collections')?->directory();
+
+        return is_string($first = reset($saved)) && $directory && ! str_starts_with($first, rtrim($directory, '/').'/');
     }
 
     private static function stamp(array $values): void

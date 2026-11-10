@@ -59,6 +59,12 @@ class Status extends Command
             return self::SUCCESS;
         }
 
+        if (\NineteenNinetyFour\Flatpack\Builder::builtElsewhere()) {
+            $row('Changed on disk since', '<fg=yellow>built for another path</> (a new release directory: run `php please flatpack:build`)');
+
+            return self::SUCCESS;
+        }
+
         $pending = State::pending();
         if (! $pending['manifest']) {
             $row('Changed on disk since', 'unknown: run `php please flatpack:build` to start tracking');

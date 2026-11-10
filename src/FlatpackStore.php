@@ -211,6 +211,13 @@ final class FlatpackStore implements Store
 
     // ---------------------------------------------------------------- persist
 
+    /** Drop everything buffered in this process, so what's on disk stays as it was. */
+    public function discard(): void
+    {
+        $this->kvDirty = $this->shardOps = $this->fbOps = $this->fbRead = $this->loaded = [];
+        $this->pointer = null;
+    }
+
     /** Write buffered changes: new content-addressed files, then the pointer, under a lock. */
     public function persist(): void
     {
