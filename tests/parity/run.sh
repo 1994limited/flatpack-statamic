@@ -19,6 +19,13 @@ reset "$O"; reset "$C"; build
 dump cold; same "cold read" cold
 dump warm; same "warm read" warm
 
+oracle "$HERE/dirty.php" "$O" "$OUT/o-dirty.json" >/dev/null && flatpack "$HERE/dirty.php" "$C" "$OUT/c-dirty.json" >/dev/null
+check "change tracking: same original values and dirty state" python3 -c "
+import json,sys
+a=json.load(open(sys.argv[1])); b=json.load(open(sys.argv[2]))
+[print('   ', k, a[k], '->', b.get(k)) for k in a if a[k]!=b.get(k)]
+sys.exit(0 if a==b and len(a)>10 else 1)" "$OUT/o-dirty.json" "$OUT/c-dirty.json"
+
 oracle "$HERE/mutate.php" "$O" "$OUT/o-mutate.json" >/dev/null
 flatpack "$HERE/mutate.php" "$C" "$OUT/c-mutate.json" >/dev/null
 check "saves: same steps and outcomes" python3 -c "

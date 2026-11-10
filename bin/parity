@@ -22,7 +22,10 @@ if [[ -z "${KEEP:-}" || ! -d "$APP/vendor" ]]; then
     # Older Statamic releases have published security advisories, which Composer refuses to
     # install by default. This throwaway app only exists to test against them.
     "${COMPOSER[@]}" config policy.advisories.block false 2>/dev/null || "${COMPOSER[@]}" config audit.block-insecure false
-    "${COMPOSER[@]}" require "statamic/cms:$VERSION" "1994/flatpack-statamic:@dev" "laravel/framework:^10.0|^11.0|^12.0|^13.0" -W --no-interaction -q
+    # Everything is updated, not only these three: the skeleton pins tools (laravel/pail, for one)
+    # to versions that need a newer Laravel than an older Statamic allows.
+    "${COMPOSER[@]}" require "statamic/cms:$VERSION" "1994/flatpack-statamic:@dev" "laravel/framework:^10.0|^11.0|^12.0|^13.0" --no-update --no-interaction -q
+    "${COMPOSER[@]}" update -W --no-interaction -q
     "$PHP" artisan key:generate -q
     for kv in STATAMIC_PRO_ENABLED=true STATAMIC_STACHE_WATCHER=false CACHE_STORE=file CACHE_DRIVER=file QUEUE_CONNECTION=sync APP_ENV=local; do
         k="${kv%%=*}"; grep -q "^$k=" .env && sed -i.bak "s|^$k=.*|$kv|" .env || echo "$kv" >> .env
@@ -36,7 +39,8 @@ sed -i.bak "s/'multisite' => false/'multisite' => true/" "$APP/config/statamic/s
 # KEEP=1 with a different version: switch the existing app to it instead of starting again.
 cd "$APP"
 if [[ "$("$PHP" -r 'require "vendor/autoload.php"; echo ltrim(Composer\InstalledVersions::getPrettyVersion("statamic/cms"), "v");')" != "${VERSION#v}" ]] && [[ "$VERSION" =~ ^v?[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-    "${COMPOSER[@]}" require "statamic/cms:$VERSION" "laravel/framework:^10.0|^11.0|^12.0|^13.0" -W --no-interaction -q
+    "${COMPOSER[@]}" require "statamic/cms:$VERSION" "laravel/framework:^10.0|^11.0|^12.0|^13.0" --no-update --no-interaction -q
+    "${COMPOSER[@]}" update -W --no-interaction -q
 fi
 
 # The fast YAML parser against this version's Symfony YAML.

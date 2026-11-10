@@ -5,6 +5,7 @@ namespace NineteenNinetyFour\Flatpack;
 use NineteenNinetyFour\Flatpack\Lazy\LazyBody;
 use NineteenNinetyFour\Flatpack\Lazy\LazyData;
 use Statamic\Entries\Entry;
+use Statamic\Facades\Blink;
 
 /**
  * Statamic's Entry with lazy heavy fields. Two core paths read every value and would load all
@@ -59,6 +60,11 @@ class FlatpackEntry extends Entry
         $this->asRead = null;
         $asRead = clone $this;
 
+        // Older Statamic versions don't give a cloned entry its own data.
+        if ($asRead->data === $this->data) {
+            $asRead->data = clone $this->data;
+        }
+
         // Dates can be changed in place, so the copy needs its own.
         if ($asRead->date instanceof \DateTimeInterface) {
             $asRead->date = clone $asRead->date;
@@ -85,9 +91,34 @@ class FlatpackEntry extends Entry
 
     private function resolveOriginal(): void
     {
-        if ($asRead = $this->asRead) {
-            $this->asRead = null;
+        if (! $asRead = $this->asRead) {
+            return;
+        }
+
+        $this->asRead = null;
+
+        if (! $asRead->origin) {
             $this->original = $asRead->getCurrentDirtyStateAttributes();
+
+            return;
+        }
+
+        // Statamic remembers an entry's origin by the entry's id, so the copy would be given
+        // this entry's origin as it is now. The copy has to see the origin it had when it was
+        // read, and what's remembered has to be put back afterwards.
+        $key = $asRead->getOriginBlinkKey();
+        $remembered = Blink::get($key);
+
+        if ($origin = $asRead->getOriginByString($asRead->origin)) {
+            Blink::put($key, $origin);
+        } else {
+            Blink::forget($key);
+        }
+
+        try {
+            $this->original = $asRead->getCurrentDirtyStateAttributes();
+        } finally {
+            $remembered ? Blink::put($key, $remembered) : Blink::forget($key);
         }
     }
 
