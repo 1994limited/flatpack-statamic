@@ -4,6 +4,7 @@
 #   PHP_BIN     php to use (default: php)
 #   SKELETON    statamic/statamic version to start from (default: matches the major)
 #   KEEP=1      reuse an app already in the work dir (skips create + install)
+#   FUZZ        how many documents to check the YAML parser with (default: 200000)
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 VERSION="${1:?statamic/cms version}"; MAJOR="$(echo "$VERSION" | tr -dc '0-9.' | cut -d. -f1)"
@@ -37,6 +38,9 @@ cd "$APP"
 if [[ "$("$PHP" -r 'require "vendor/autoload.php"; echo ltrim(Composer\InstalledVersions::getPrettyVersion("statamic/cms"), "v");')" != "${VERSION#v}" ]] && [[ "$VERSION" =~ ^v?[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
     "${COMPOSER[@]}" require "statamic/cms:$VERSION" "laravel/framework:^10.0|^11.0|^12.0|^13.0" -W --no-interaction -q
 fi
+
+# The fast YAML parser against this version's Symfony YAML.
+"$PHP" "$ROOT/tests/yaml/fuzz.php" "$APP" "${FUZZ:-200000}"
 
 rm -rf "$WORK/oracle.noindex"; cp -R "$APP" "$WORK/oracle.noindex"
 rm -rf "$WORK/flatpack.noindex"; cp -R "$APP" "$WORK/flatpack.noindex"

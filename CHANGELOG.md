@@ -1,5 +1,20 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- **A faster YAML parser that gives up on far fewer files.** An unusual key or value (a double-quoted string with escapes, a key that starts with a digit or has a dash or quotes, a date) is now read by Symfony's inline parser on its own, where before the whole file went back to Symfony's full parser. Tabs inside literal blocks no longer send the file back either. On a large site, files that needed the full parser went from 38% to 2%, and parsing all of its content from 13.9 s to 1.6 s.
+
+### Fixed
+
+- A sequence written inside a sequence item (`- - one`) was read as the text `- one`.
+- Results now match Symfony's in the cases where its versions differ: an empty literal block, an empty value followed by a blank line, and a literal block near the end of front matter.
+
+### Added
+
+- `tests/yaml/fuzz.php` checks the parser against Symfony's with random and mutated documents. The parity suite runs it on every Statamic version it tests.
+
 ## 1.0.0 (2026-11-06)
 
 The first version.
