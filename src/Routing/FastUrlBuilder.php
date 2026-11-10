@@ -22,6 +22,7 @@ class FastUrlBuilder extends UrlBuilder
         'true' => 1, 'false' => 1, 'null' => 1, 'void' => 1, 'if' => 1, 'else' => 1, 'elseif' => 1, 'unless' => 1, 'elseunless' => 1,
         'endif' => 1, 'endunless' => 1, 'and' => 1, 'or' => 1, 'xor' => 1, 'not' => 1, 'switch' => 1, 'once' => 1, 'endonce' => 1,
         'noparse' => 1, 'endnoparse' => 1, 'stop' => 1, 'recursive' => 1, 'new' => 1, 'bwa' => 1, 'bwo' => 1, 'bxor' => 1, 'bnot' => 1, 'bsl' => 1, 'bsr' => 1,
+        'list' => 1, 'as' => 1, 'arr' => 1, 'merge' => 1, 'pluck' => 1, 'where' => 1, 'take' => 1, 'skip' => 1, 'orderby' => 1, 'groupby' => 1,
     ];
 
     private static ?PlainTextParser $plain = null;
