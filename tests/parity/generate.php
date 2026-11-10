@@ -123,6 +123,22 @@ for ($i = 0; $i < $n; $i++) {
     }
 }
 
+// ---- notes and guides: routes that aren't only plain placeholders, so URLs still come from Antlers
+$write("$c/collections/notes.yaml", $yaml(['title' => 'Notes', 'sites' => ['en'], 'route' => '/notes/{{ slug }}-{{ title | length }}']));
+$write("$c/collections/guides.yaml", $yaml(['title' => 'Guides', 'sites' => ['en'], 'route' => '/guides/{topics}/{level}/{slug}']));
+for ($i = 0; $i < 6; $i++) {
+    $slug = strtolower(str_replace(' ', '-', $title(2))).'-'.$i;
+    $write("$c/collections/notes/en/$slug.md", "---\n".$yaml(['id' => $uuid("note-$i"), 'title' => $title(3)])."---\n");
+    // topics is a list and level is sometimes missing or has braces in it: none of those can be put in directly
+    $guide = ['id' => $uuid("guide-$i"), 'title' => $title(3), 'topics' => ['alpha', 'beta']];
+    if ($i % 3 === 1) {
+        $guide['level'] = 'intro';
+    } elseif ($i % 3 === 2) {
+        $guide['level'] = 'a{b}c';
+    }
+    $write("$c/collections/guides/en/$slug.md", "---\n".$yaml($guide)."---\n");
+}
+
 // ---- team: single site, structured without root, orderable
 $write("$c/collections/team.yaml", $yaml(['title' => 'Team', 'sites' => ['en'], 'route' => '/team/{slug}', 'structure' => ['max_depth' => 1]]));
 $team = [];

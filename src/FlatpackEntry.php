@@ -11,9 +11,13 @@ use Statamic\Entries\Entry;
  * bodies during indexing; both are routed around the placeholders here:
  *   - routeData(): a route template only sees the lazy fields it names
  *   - dirty-state snapshots keep placeholders instead of loading bodies
+ * The dirty-state snapshot is also only worked out when something asks for it.
  */
 class FlatpackEntry extends Entry
 {
+    /** This entry as it was when last read or saved, until its dirty-state snapshot is needed. */
+    private ?self $asRead = null;
+
     public function data($data = null)
     {
         if (func_num_args() === 0) {
@@ -42,6 +46,56 @@ class FlatpackEntry extends Entry
     public function getCurrentDirtyStateAttributes(): array
     {
         return $this->withSwappedData(fn ($d) => collect($d->rawItems()), fn () => parent::getCurrentDirtyStateAttributes());
+    }
+
+    /**
+     * Statamic snapshots an entry's state every time one is read from the Stache, so it can
+     * later say what changed. Most entries are never asked. Keeping a copy of the entry as it
+     * was, and working the snapshot out from that copy only when something asks, costs a
+     * shallow clone per read instead.
+     */
+    public function syncOriginal(): static
+    {
+        $this->asRead = null;
+        $asRead = clone $this;
+
+        // Dates can be changed in place, so the copy needs its own.
+        if ($asRead->date instanceof \DateTimeInterface) {
+            $asRead->date = clone $asRead->date;
+        }
+
+        $this->asRead = $asRead;
+
+        return $this;
+    }
+
+    public function getOriginal($key = null, $fallback = null)
+    {
+        $this->resolveOriginal();
+
+        return parent::getOriginal($key, $fallback);
+    }
+
+    public function isDirty($attributes = null): bool
+    {
+        $this->resolveOriginal();
+
+        return parent::isDirty($attributes);
+    }
+
+    private function resolveOriginal(): void
+    {
+        if ($asRead = $this->asRead) {
+            $this->asRead = null;
+            $this->original = $asRead->getCurrentDirtyStateAttributes();
+        }
+    }
+
+    public function __sleep()
+    {
+        $this->resolveOriginal();
+
+        return array_values(array_diff(parent::__sleep(), ['asRead']));
     }
 
     /** Run $fn with this entry's (and its origins') unloaded LazyData temporarily replaced. */

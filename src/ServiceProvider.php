@@ -71,6 +71,7 @@ class ServiceProvider extends AddonServiceProvider
         $this->app->booting(function ($app) {
             $app->bind(\Statamic\Contracts\Entries\Entry::class, FlatpackEntry::class);
             $app->bind(\Statamic\Stache\Traverser::class, Stache\FastTraverser::class);
+            $app->bind(\Statamic\Contracts\Routing\UrlBuilder::class, Routing\FastUrlBuilder::class);
             $app->singleton(\Statamic\Yaml\Yaml::class, fn () => new LeanYaml(new Yaml\SymfonyFast));
             Facade::clearResolvedInstance(\Statamic\Yaml\Yaml::class);
         });
