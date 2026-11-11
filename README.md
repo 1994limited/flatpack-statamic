@@ -29,21 +29,21 @@ Measured with the [Dog-ear Books demo](https://github.com/1994limited/flatpack-s
 
 ![Typical page load: Statamic against Flatpack, for each shape and size](https://raw.githubusercontent.com/1994limited/statamic-marketplace/main/flatpack/charts/performance-page.png)
 
-![Saving an entry: Statamic against Flatpack, for each shape and size](https://raw.githubusercontent.com/1994limited/statamic-marketplace/main/flatpack/charts/performance-save.png)
+| Content | Entries | Build | Build memory | Typical page |
+|---|---|---:|---:|---:|
+| Fixed fields, small | 375 | 952 ms → **610 ms** | 81 MB → **57 MB** | 73 ms → **61 ms** |
+| Fixed fields, medium | 2,250 | 5.0 s → **3.1 s** | 143 MB → **91 MB** | 121 ms → **100 ms** |
+| Fixed fields, large | 9,000 | 22.8 s → **12.5 s** | 375 MB → **213 MB** | 306 ms → **262 ms** |
+| Page builder, small | 375 | 1.5 s → **700 ms** | 133 MB → **59 MB** | 82 ms → **68 ms** |
+| Page builder, medium | 2,250 | 8.3 s → **3.7 s** | 351 MB → **97 MB** | 149 ms → **131 ms** |
+| Page builder, large | 9,000 | 37.0 s → **15.0 s** | 1.1 GB → **241 MB** | 355 ms → **307 ms** |
+| Nested page builder, small | 375 | 2.4 s → **800 ms** | 165 MB → **59 MB** | 103 ms → **87 ms** |
+| Nested page builder, medium | 2,250 | 14.1 s → **4.0 s** | 641 MB → **97 MB** | 200 ms → **172 ms** |
+| Nested page builder, large | 9,000 | 58.7 s → **14.7 s** | 2.2 GB → **241 MB** | 554 ms → **473 ms** |
 
-| Content | Entries | Build | Build memory | Typical page | Save |
-|---|---|---:|---:|---:|---:|
-| Fixed fields, small | 375 | 952 ms → **610 ms** | 81 MB → **57 MB** | 73 ms → **61 ms** | 101 ms → **81 ms** |
-| Fixed fields, medium | 2,250 | 5.0 s → **3.1 s** | 143 MB → **91 MB** | 121 ms → **100 ms** | 240 ms → **171 ms** |
-| Fixed fields, large | 9,000 | 22.8 s → **12.5 s** | 375 MB → **213 MB** | 306 ms → **262 ms** | 1.6 s → **578 ms** |
-| Page builder, small | 375 | 1.5 s → **700 ms** | 133 MB → **59 MB** | 82 ms → **68 ms** | 112 ms → **82 ms** |
-| Page builder, medium | 2,250 | 8.3 s → **3.7 s** | 351 MB → **97 MB** | 149 ms → **131 ms** | 400 ms → **184 ms** |
-| Page builder, large | 9,000 | 37.0 s → **15.0 s** | 1.1 GB → **241 MB** | 355 ms → **307 ms** | 1.8 s → **604 ms** |
-| Nested page builder, small | 375 | 2.4 s → **800 ms** | 165 MB → **59 MB** | 103 ms → **87 ms** | 123 ms → **87 ms** |
-| Nested page builder, medium | 2,250 | 14.1 s → **4.0 s** | 641 MB → **97 MB** | 200 ms → **172 ms** | 582 ms → **195 ms** |
-| Nested page builder, large | 9,000 | 58.7 s → **14.7 s** | 2.2 GB → **241 MB** | 554 ms → **473 ms** | 2.3 s → **494 ms** |
+Statamic → **with Flatpack**. "Typical page" is the median of six kinds of page (home, a book list, a book, a journal post, an author, a subject).
 
-Statamic → **with Flatpack**. "Typical page" is the median of six kinds of page (home, a book list, a book, a journal post, an author, a subject). Saves are single measurements, so read them as a direction.
+Saving isn't in the table because it comes out about level. On the 9,000-entry nested site, the request that saves a book takes about 140 ms with Statamic and about 130 ms with Flatpack, in roughly half the memory. Creating or deleting an entry is slower with Flatpack, by about a quarter.
 
 What it shows: the bigger the site and the deeper its page builders, the more Flatpack saves at build time and in memory (4× faster and 9× less memory for a 9,000-entry site with nested page builders). Page loads improve by 12 to 17%: most of a page's time is spent rendering templates, which Flatpack doesn't change. Your numbers will differ, so run the demo on your own machine: `php artisan demo:compare --all`.
 
