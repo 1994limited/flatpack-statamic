@@ -227,6 +227,8 @@ final class FlatpackStore implements Store
         flock($lock, LOCK_EX);
         try {
             // re-read: other processes may have persisted since this request started
+            $read = $this->loaded;
+            $readFrom = $this->pointer ?? [];
             $this->pointer = null;
             $this->loaded = [];
             $pointer = $this->pointer();
@@ -238,6 +240,13 @@ final class FlatpackStore implements Store
                 $pointer = $this->writeLogical($pointer, $logical, $rows ?: null, 'shards');
             }
             foreach ($this->kvDirty as $logical => $value) {
+                // Statamic puts every index of a collection back on each save, and most come back
+                // exactly as they were read. Comparing is far cheaper than exporting them again
+                // to find the file already exists.
+                if ($value !== null && isset($read[$logical], $pointer[$logical])
+                    && $pointer[$logical] === ($readFrom[$logical] ?? null) && $read[$logical] === $value) {
+                    continue;
+                }
                 $pointer = $this->writeLogical($pointer, $logical, $value, 'kv');
             }
             $this->persistFallback();

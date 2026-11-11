@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- **Saving an entry does less work afterwards.** Statamic puts every index of a collection back into the Stache on each save, and most of them come back exactly as they were read. Flatpack used to export each one to PHP again before noticing the file already existed. It now compares first and skips the ones that haven't changed. On the demo's 9,000-entry site, the request that saves a book went from about 165 ms to about 130 ms.
+
 ## 1.2.0 (2026-11-10)
 
 ### Changed
