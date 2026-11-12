@@ -17,7 +17,8 @@ final class Flatpack
     public static function configure(string $path, int $lazyLimit = 2048): void
     {
         self::$path = rtrim($path, '/');
-        self::$lazyLimit = $lazyLimit;
+        // Nothing is over a limit of zero or less, so it means "never": everything is parsed up front.
+        self::$lazyLimit = $lazyLimit > 0 ? $lazyLimit : PHP_INT_MAX;
         self::$bodies = null;
     }
 
