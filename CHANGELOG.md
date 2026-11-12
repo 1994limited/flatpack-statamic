@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- **`FLATPACK_LAZY_LIMIT=0` no longer stops the build.** The setting is documented as "parse everything up front", but a limit of zero was read as "every field is over the limit", so every field (the id and title included) was set aside to be parsed later and `flatpack:build` failed with `Unsupported operand types: array + null`. Zero now means what the config file says.
+
 ## 1.2.1 (2026-11-11)
 
 ### Changed
